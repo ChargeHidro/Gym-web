@@ -1,0 +1,115 @@
+:root {
+  --accent: #c6ff00;
+}
+
+html { scroll-behavior: smooth; }
+
+.accent-text { color: var(--accent); }
+.accent-bg { background: var(--accent); }
+
+/* Big outlined word behind the hero */
+.stroke-text {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(255, 255, 255, 0.07);
+}
+
+/* Faint grid behind the hero, fading out at the edges */
+.grid-bg {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+  background-size: 56px 56px;
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse at center, #000 30%, transparent 75%);
+}
+
+/* Soft accent-coloured light blobs */
+.glow {
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 35%, transparent), transparent 65%);
+  filter: blur(40px);
+}
+
+.btn-accent {
+  background: var(--accent);
+  color: #0a0a0a;
+  box-shadow: 0 10px 40px -10px color-mix(in srgb, var(--accent) 70%, transparent);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.btn-accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 50px -10px color-mix(in srgb, var(--accent) 90%, transparent);
+}
+
+.card {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.015));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: border-color 0.3s ease, transform 0.3s ease;
+}
+.card:hover {
+  border-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  transform: translateY(-4px);
+}
+
+.icon-tile {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
+}
+
+.popular {
+  border: 2px solid var(--accent);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--accent) 10%, transparent), rgba(255, 255, 255, 0.02));
+}
+
+/* Form fields */
+.field {
+  width: 100%;
+  border-radius: 0.75rem;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.875rem 1rem;
+  color: #fafafa;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.field:focus { border-color: var(--accent); }
+.field::placeholder { color: #71717a; }
+input, select { color-scheme: dark; }
+
+/* Sticky header gets a blurred background once you scroll */
+#nav.scrolled {
+  background: rgba(9, 9, 11, 0.8);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* Scrolling strip of program names */
+.marquee {
+  display: flex;
+  width: max-content;
+  animation: marquee 40s linear infinite;
+}
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* Fade-up on scroll */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+.reveal.in { opacity: 1; transform: none; }
+
+@keyframes float {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(-30px, 20px); }
+}
+.float { animation: float 12s ease-in-out infinite; }
+
+/* Make the Google map match the dark theme */
+.map-dark { filter: invert(90%) hue-rotate(180deg) saturate(0.6); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .marquee, .float { animation: none; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}
