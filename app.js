@@ -28,21 +28,27 @@
   const icon = (name, cls = "w-4 h-4") =>
     `<svg class="${cls} shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[name] || ""}</svg>`;
 
-  // Without a valid ?gym=..., show a neutral page (or the full list with ?all=1)
-  if (!slug || !gyms[slug]) {
+  // Which gym? A saved one (?gym=key) or any gym described in the link (?n=Name&...)
+  const presets = window.GYM_PRESETS || {};
+  const entry = slug && gyms[slug] ? gyms[slug] : fromParams(params);
+
+  // Neither: show a neutral page (or the saved list with ?all=1)
+  if (!entry) {
     if (params.has("all")) renderIndex();
     else renderPrivate();
     return;
   }
 
-  const g = merge(window.GYM_DEFAULTS, gyms[slug]);
+  const g = merge(merge(window.GYM_DEFAULTS, presets[entry.preset] || presets.lime || {}), entry);
   applyTheme(g.theme);
-  document.title = `${g.name} · ${g.tagline}`;
 
-  const fullName = `${g.name} ${g.tagline}`;
-  const wa = (text) => `https://wa.me/${g.phone}?text=${encodeURIComponent(text)}`;
-  const tel = `tel:+${g.phone}`;
-  const phonePretty = `+${g.phone.slice(0, 2)} ${g.phone.slice(2, 7)} ${g.phone.slice(7)}`;
+  const fullName = [g.name, g.tagline].filter(Boolean).join(" ");
+  document.title = fullName;
+  const phone = String(g.phone || "").replace(/\D/g, "");
+  // Without a phone number, WhatsApp opens its contact picker instead
+  const wa = (text) => `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
+  const tel = phone ? `tel:+${phone}` : "#visit";
+  const phonePretty = phone ? `+${phone.slice(0, 2)} ${phone.slice(2, 7)} ${phone.slice(7)}` : "Call us";
   const mapQuery = encodeURIComponent(g.address || `${fullName}, ${g.area}`);
   const mapsLink = `https://www.google.com/maps/search/?api=1&query=${mapQuery}`;
   const daysLeft = Math.ceil((new Date(`${g.offer.ends}T23:59:59`) - new Date()) / 86400000);
@@ -411,6 +417,31 @@
 
   // ---------- Functions ----------
 
+  // Build a gym from link parameters: ?n=Name&a=Area&p=Phone&t=theme&tg=&r=&rc=&since=
+  function fromParams(p) {
+    const name = (p.get("n") || "").trim().slice(0, 60);
+    if (!name) return null;
+    const digits = (p.get("p") || "").replace(/\D/g, "");
+    const phoneNo = digits.length === 10 ? "91" + digits : digits.length === 12 && digits.startsWith("91") ? digits : "";
+    const area = (p.get("a") || "").trim().slice(0, 60);
+    const e = {
+      name,
+      tagline: p.has("tg") ? p.get("tg").trim().slice(0, 40) : /gym|fitness/i.test(name) ? "" : "Gym & Fitness",
+      phone: phoneNo,
+      preset: p.get("t") || "lime",
+    };
+    if (area) e.area = area;
+    const r = parseFloat(p.get("r"));
+    if (r >= 1 && r <= 5) {
+      e.rating = r;
+      const rc = parseInt(p.get("rc"), 10);
+      if (rc > 0) e.reviewCount = rc;
+    }
+    const since = parseInt(p.get("since"), 10);
+    if (since > 1900 && since <= new Date().getFullYear()) e.eyebrow = `Since ${since} · Trusted in ${area || "Delhi"}`;
+    return e;
+  }
+
   function applyTheme(t) {
     const root = document.documentElement.style;
     const dark = t.dark || "#121212";
@@ -484,7 +515,8 @@
         <div class="mt-8 space-y-3">
           ${Object.entries(gyms)
             .map(([key, v]) => {
-              const accent = esc((v.theme && v.theme.accent) || "#d4f53c");
+              const theme = v.theme || ((window.GYM_PRESETS || {})[v.preset] || {}).theme || {};
+              const accent = esc(theme.accent || "#d4f53c");
               return `
             <a href="?gym=${encodeURIComponent(key)}" class="flex items-center justify-between gap-4 p-5 border line-dark hover:bg-white/5 transition">
               <div class="min-w-0">
